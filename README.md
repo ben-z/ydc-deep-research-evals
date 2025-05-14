@@ -68,7 +68,6 @@ The input CSV file should contain the following columns:
 - `question`: The research question or prompt
 - `baseline_answer`: The reference answer to compare against
 - `candidate_answer`: The candidate answer to evaluate
-- Any additional columns will be preserved as metadata in the output
 
 ### Output
 
