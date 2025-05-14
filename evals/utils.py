@@ -15,21 +15,16 @@ client = OpenAI(
 )
 
 
-OPENAI_MODELS_WITHOUT_TEMPERATURE = ["o3-mini", "o1", "o1-mini"]
-
-
 def query_openai_model(
     messages: list[ChatCompletionMessageParam],
-    model: str = "gpt-3.5-turbo",
+    model: str = "o3-mini-2025-01-31",
     max_output_tokens: int = 512,
     temperature: float = 0.0,
     timeout: int = 120,
     response_type: Literal["text", "json_object"] = "text",
 ) -> dict:
     response_format = {"type": response_type}
-    has_no_temperature = any(
-        model_name in model for model_name in OPENAI_MODELS_WITHOUT_TEMPERATURE
-    )
+    has_no_temperature = model.startswith("o")
     response = client.chat.completions.create(
         model=model,
         temperature=NOT_GIVEN if has_no_temperature else temperature,
@@ -44,14 +39,12 @@ def query_openai_model(
 def query_openai_model_structured_outputs(
     messages: list[ChatCompletionMessageParam],
     output_class: Type[BaseModel],
-    model: str = "gpt-4o-2024-08-06",
+    model: str = "o3-mini-2025-01-31",
     max_completion_tokens: int = 5000,
     temperature: float = 0.0,
     timeout: int = 120,
 ) -> Optional[BaseModel]:
-    has_no_temperature = any(
-        model_name in model for model_name in OPENAI_MODELS_WITHOUT_TEMPERATURE
-    )
+    has_no_temperature = model.startswith("o")
     completion = client.beta.chat.completions.parse(
         model=model,
         messages=messages,
@@ -64,4 +57,6 @@ def query_openai_model_structured_outputs(
 
 
 def replace_markdown_links_with_text(sentence: str, replacement: str) -> str:
-    return re.sub(r"\[((?:\[)?([^]]+)(?:\])?)\]\(([^)]+)\)", replacement, sentence)
+    return re.sub(
+        r" ?\(?\[((?:\[)?([^]]+)(?:\])?)\]\(([^)]+)\)\)?", replacement, sentence
+    )
