@@ -240,7 +240,7 @@ def main():
 
     # Load input data
     print(f"Loading data from {args.input_data}")
-    df = pd.read_csv(args.input_data).head(10)
+    df = pd.read_csv(args.input_data)
     print(f"Loaded {len(df)} examples")
 
     # Initialize evaluator

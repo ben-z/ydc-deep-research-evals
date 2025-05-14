@@ -67,8 +67,7 @@ python evals/deep_research_pairwise_evals.py \
 The input CSV file should contain the following columns:
 - `question`: The research question or prompt
 - `baseline_answer`: The reference answer to compare against
-- `candidate_answer`: The candidate answer to evaluate
-- Any additional columns will be preserved as metadata in the output
+- `candidate_answer`: The candidate answer to evaluate (This should be responses from your own system)
 
 ### Output
 
