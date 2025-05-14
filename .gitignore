@@ -3,6 +3,7 @@ evals.egg-info/
 
 .venv/
 venv/
+venv*
 
 # MacOS folder metadata
 .DS_Store
