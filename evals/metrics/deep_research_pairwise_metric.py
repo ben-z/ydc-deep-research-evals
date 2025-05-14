@@ -13,7 +13,6 @@ from evals.utils import (
     replace_markdown_links_with_text,
 )
 
-
 DIMENSIONS = [
     "instruction_following",
     "comprehensiveness",
@@ -92,7 +91,7 @@ class DimensionResult(BaseModel):
     grade: str
     is_win: bool
     is_tie: bool
-    is_win_or_tie: bool
+    is_lose: bool
     score: float
     preferred: List[str]
     raw_preferences: dict
@@ -396,8 +395,7 @@ WEAKNESSES:
                 grade=dimension_output_dict["consensus_grade"],
                 is_win=dimension_output_dict["consensus_grade"] == "win",
                 is_tie=dimension_output_dict["consensus_grade"] == "tie",
-                is_win_or_tie=dimension_output_dict["consensus_grade"]
-                in ["win", "tie"],
+                is_lose=dimension_output_dict["consensus_grade"] == "lose",
                 score=dimension_output_dict["consensus_score"],
                 preferred=dimension_output_dict["all_preferred"],
                 raw_preferences=dimension_output_dict["raw_preferences"],
@@ -435,16 +433,16 @@ WEAKNESSES:
             tie_rate = sum(result.is_tie for result in dimension_results) / len(
                 dimension_results
             )
-            win_or_tie_rate = sum(
-                result.is_win_or_tie for result in dimension_results
-            ) / len(dimension_results)
+            lose_rate = sum(result.is_lose for result in dimension_results) / len(
+                dimension_results
+            )
             avg_score = sum(result.score for result in dimension_results) / len(
                 dimension_results
             )
 
             # Calculate net winrate
             num_wins = sum(result.is_win for result in dimension_results)
-            num_losses = sum(not result.is_win_or_tie for result in dimension_results)
+            num_losses = sum(result.is_lose for result in dimension_results)
             net_winrate = (
                 num_wins / (num_wins + num_losses)
                 if (num_wins + num_losses) > 0
@@ -455,27 +453,27 @@ WEAKNESSES:
             aggregated_metrics[dimension] = {
                 "win_rate": win_rate,
                 "tie_rate": tie_rate,
-                "win_or_tie_rate": win_or_tie_rate,
+                "lose_rate": lose_rate,
                 "avg_score": avg_score,
                 "net_winrate": net_winrate,
             }
 
-        # Create macro average dictionary
-        aggregated_metrics["macro_avg"] = {}
+        # Create overall average dictionaries
+        aggregated_metrics["overall"] = {}
 
-        # Calculate macro averages for each metric
+        # Calculate overall averages for each metric
         metrics = [
             "win_rate",
             "tie_rate",
-            "win_or_tie_rate",
+            "lose_rate",
             "avg_score",
             "net_winrate",
         ]
         for metric in metrics:
-            macro_avg = sum(
+            overall_avg = sum(
                 aggregated_metrics[dimension][metric] for dimension in DIMENSIONS
             ) / len(DIMENSIONS)
-            aggregated_metrics["macro_avg"][metric] = macro_avg
+            aggregated_metrics["overall"][metric] = overall_avg
 
         # Collect raw preferences for explanation summary
         raw_preferences = []
@@ -549,9 +547,9 @@ if __name__ == "__main__":
     print(json.dumps(aggregated, indent=2))
     print(f"\nSupport: {aggregated['support']}")
 
-    # Print macro averages
-    print("\nMacro Averages:")
-    for metric, value in aggregated["macro_avg"].items():
+    # Print overall
+    print("\nOverall:")
+    for metric, value in aggregated["overall"].items():
         if isinstance(value, float):
             print(f"{metric}: {value:.2f}")
         else:
