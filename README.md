@@ -57,7 +57,7 @@ python evals/deep_research_pairwise_evals.py \
   --input-data datasets/ari_15_may_2025.csv \
   --output-dir path/to/output/directory \
   --model o3-mini-2025-01-31 \
-  --evaluator-num-workers 4 \
+  --num-workers 4 \
   --metric-num-workers 3 \
   --metric-num-trials 3
 ```
