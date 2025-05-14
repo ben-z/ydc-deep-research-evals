@@ -55,10 +55,10 @@ class DeepResearchPairwisePreferenceOutput(BaseModel):
 
 class DeepResearchPairwisePreferenceInput(BaseModel):
     question: str
-    reference_answer: str
-    predicted_answer: str
+    baseline_answer: str
+    candidate_answer: str
 
-    @field_validator("predicted_answer", "reference_answer")
+    @field_validator("candidate_answer", "baseline_answer")
     @classmethod
     def validate_non_empty_answer(cls, v: str) -> str:
         if not v or v.strip() == "":
@@ -142,11 +142,11 @@ class DeepResearchPairwiseMetric:
 </prompt>
 
 <report_a>
-{metric_input.reference_answer}
+{metric_input.baseline_answer}
 </report_a>
 
 <report_b>
-{metric_input.predicted_answer}
+{metric_input.candidate_answer}
 </report_b>
 """,
             },
@@ -171,12 +171,12 @@ class DeepResearchPairwiseMetric:
     def _get_pairwise_preference(
         self, metric_input: DeepResearchPairwisePreferenceInput
     ) -> dict:
-        """Get pairwise preference between a reference and predicted research answer."""
-        # Create flipped input (reference=B, predicted=A)
+        """Get pairwise preference between a baseline and candidate research answer."""
+        # Create flipped input (baseline=B, candidate=A)
         input_flipped = DeepResearchPairwisePreferenceInput(
             question=metric_input.question,
-            reference_answer=metric_input.predicted_answer,
-            predicted_answer=metric_input.reference_answer,
+            baseline_answer=metric_input.candidate_answer,
+            candidate_answer=metric_input.baseline_answer,
         )
 
         # Get messages for both original and flipped inputs
@@ -363,24 +363,24 @@ WEAKNESSES:
     def score(
         self,
         question: str,
-        reference_answer: str,
-        predicted_answer: str,
+        baseline_answer: str,
+        candidate_answer: str,
     ) -> DeepResearchScoreResult:
         """
         Score a single question-answer pair.
 
         Args:
             question: The research question
-            reference_answer: The reference answer (report_a)
-            predicted_answer: The predicted answer (report_b)
+            baseline_answer: The baseline answer (report_a)
+            candidate_answer: The candidate answer (report_b)
 
         Returns:
             Object containing dimension-level scores and grades
         """
         metric_input = DeepResearchPairwisePreferenceInput(
             question=question,
-            reference_answer=reference_answer,
-            predicted_answer=predicted_answer,
+            baseline_answer=baseline_answer,
+            candidate_answer=candidate_answer,
         )
 
         output_dict = self._get_pairwise_preference(metric_input)
@@ -504,7 +504,7 @@ if __name__ == "__main__":
 
     # Sample question and answers
     question = "What are the economic impacts of climate change?"
-    reference_answer = """
+    baseline_answer = """
     Climate change has significant economic impacts globally:
     
     1. Agriculture: Changing weather patterns affect crop yields and food security.
@@ -514,7 +514,7 @@ if __name__ == "__main__":
     5. Insurance: Higher premiums due to increased natural disasters.
     """
 
-    predicted_answer = """
+    candidate_answer = """
     The economic impacts of climate change include:
     
     1. Agricultural disruption due to changing weather patterns and extreme events
@@ -526,8 +526,8 @@ if __name__ == "__main__":
     print("Running evaluation...")
     result = evaluator.score(
         question=question,
-        reference_answer=reference_answer,
-        predicted_answer=predicted_answer,
+        baseline_answer=baseline_answer,
+        candidate_answer=candidate_answer,
     )
 
     print("\nScore Result:")
