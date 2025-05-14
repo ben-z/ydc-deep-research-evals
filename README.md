@@ -22,12 +22,25 @@ These dimensions align with the capabilities that make Deep Research tools effec
    cd ydc-deep-research-evals
    ```
 
-2. Install the required dependencies:
+2. Install Git LFS (Large File Storage) if you don't have it already:  
+(This is required for downloading the example dataset in this repo)
+   ```bash
+   # On Ubuntu/Debian
+   apt-get install git-lfs
+   
+   # On macOS (using Homebrew)
+   brew install git-lfs
+   
+   # Initialize Git LFS
+   git lfs install
+   ```
+
+3. Install the required dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Set up environment variables for OpenAI API access:
+4. Set up environment variables for OpenAI API access:
    ```bash
    export OPENAI_API_KEY=your_openai_api_key
    export OPENAI_ORGANIZATION_ID=your_openai_org_id
