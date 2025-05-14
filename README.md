@@ -53,8 +53,8 @@ These dimensions align with the capabilities that make Deep Research tools effec
 To evaluate research-style responses, use the `deep_research_pairwise_evals.py` script:
 
 ```bash
-python deep_research_pairwise_evals.py \
-  --input-data path/to/your/data.csv \
+python evals/deep_research_pairwise_evals.py \
+  --input-data datasets/ari_15_may_2025.csv \
   --output-dir path/to/output/directory \
   --model o3-mini-2025-01-31 \
   --evaluator-num-workers 4 \
@@ -66,8 +66,8 @@ python deep_research_pairwise_evals.py \
 
 The input CSV file should contain the following columns:
 - `question`: The research question or prompt
-- `reference_answer`: The reference answer to compare against
-- `predicted_answer`: The predicted answer to evaluate
+- `baseline_answer`: The reference answer to compare against
+- `candidate_answer`: The candidate answer to evaluate
 - Any additional columns will be preserved as metadata in the output
 
 ### Output
@@ -96,8 +96,8 @@ metric = DeepResearchPairwiseMetric(
 # Evaluate a single question-answer pair
 result = metric.score(
     question="What are the impacts of climate change on agriculture?",
-    reference_answer="Your reference answer text...",
-    predicted_answer="Your predicted answer text..."
+    baseline_answer="Your reference answer text...",
+    candidate_answer="Your candidate answer text..."
 )
 
 # Access the evaluation results
@@ -112,7 +112,7 @@ print(f"Writing Quality Score: {result.writing_quality.score}")
 The evaluator supports several configuration options:
 
 - `model`: The OpenAI model to use for evaluation (default: o3-mini-2025-01-31)
-- `evaluator-num-workers`: Number of worker threads for parallel processing (default: 4)
+- `num-workers`: Number of worker threads for parallel processing (default: 4)
 - `metric-num-workers`: Number of worker threads for the underlying metric (default: 3)
 - `metric-num-trials`: Number of trials per evaluation for more stable results (default: 3)
 
@@ -122,11 +122,6 @@ This project is licensed under the terms included in the LICENSE file.
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.10+
 - OpenAI API access
-- Dependencies listed in requirements.txt:
-  - openai==1.61.0
-  - pydantic==2.5.3
-  - pandas==2.0.0
-  - tqdm==4.66.3
-  - retry==0.9.2
+- Dependencies listed in requirements.txt
