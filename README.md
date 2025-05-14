@@ -115,6 +115,7 @@ The evaluator supports several configuration options:
 - `num-workers`: Number of worker threads for parallel processing (default: 4)
 - `metric-num-workers`: Number of worker threads for the underlying metric (default: 3)
 - `metric-num-trials`: Number of trials per evaluation for more stable results (default: 3)
+  - For each trial, the evaluation runs twice - once with the original order and once with the baseline and candidate answers flipped. This helps mitigate potential position bias in the evaluation.
 
 ## License
 

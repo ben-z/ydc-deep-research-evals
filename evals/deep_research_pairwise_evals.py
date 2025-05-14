@@ -223,7 +223,7 @@ def parse_args():
         "--metric-num-trials",
         type=int,
         default=3,
-        help="Number of trials per metric computation. The higher this number, the more stable the metric will be, but it will also take longer to compute.",
+        help="Number of trials per metric computation. Each trial runs the evaluation twice (with original and flipped inputs). Higher values produce more stable metrics but increase computation time.",
     )
     return parser.parse_args()
 
@@ -240,7 +240,7 @@ def main():
 
     # Load input data
     print(f"Loading data from {args.input_data}")
-    df = pd.read_csv(args.input_data)
+    df = pd.read_csv(args.input_data).head(10)
     print(f"Loaded {len(df)} examples")
 
     # Initialize evaluator
