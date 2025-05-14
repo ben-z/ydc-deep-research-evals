@@ -1,14 +1,13 @@
 import argparse
 import concurrent.futures
 import json
-import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from tqdm import tqdm
 
-from ydc_evals_optimize.metrics.deep_research.deep_research_pairwise_metric import (
+from evals.metrics.deep_research_pairwise_metric import (
     DEFAULT_EVAL_MODEL,
     DeepResearchPairwiseMetric,
     DeepResearchScoreResult,
@@ -22,8 +21,8 @@ class DeepResearchEvaluator:
         self,
         model: str = DEFAULT_EVAL_MODEL,
         output_path: Optional[Path] = None,
-        evaluator_num_workers: int = 4,
-        metric_num_workers: int = 3,
+        num_workers: int = 4,
+        metric_num_workers: int = 1,
         metric_num_trials: int = 3,
     ):
         """
@@ -32,13 +31,13 @@ class DeepResearchEvaluator:
         Args:
             model: The model to use for evaluation
             output_path: Path to save evaluation results
-            evaluator_num_workers: Number of workers for parallel processing of evaluation tasks
+            num_workers: Number of workers for parallel processing of evaluation tasks
             metric_num_workers: Number of workers for the underlying pairwise metric
             metric_num_trials: Number of trials to run for each evaluation
         """
         self.model = model
         self.output_path = output_path
-        self.evaluator_num_workers = evaluator_num_workers
+        self.num_workers = num_workers
         self.metric_num_trials = metric_num_trials
 
         # Initialize the pairwise evaluator
@@ -51,40 +50,32 @@ class DeepResearchEvaluator:
     def evaluate_single(
         self,
         question: str,
-        reference_answer: str,
-        predicted_answer: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        baseline_answer: str,
+        candidate_answer: str,
     ) -> Dict[str, Any]:
         """
         Evaluate a single question-answer pair.
 
         Args:
             question: The research question
-            reference_answer: The reference answer
-            predicted_answer: The predicted answer to evaluate
-            metadata: Additional metadata to include in the result
+            baseline_answer: The reference answer
+            candidate_answer: The predicted answer to evaluate
 
         Returns:
             Dictionary containing evaluation results
         """
         result = {
             "question": question,
-            "reference_answer": reference_answer,
-            "predicted_answer": predicted_answer,
-            "model": self.model,
-            "timestamp": time.time(),
+            "baseline_answer": baseline_answer,
+            "candidate_answer": candidate_answer,
         }
-
-        # Include any additional metadata
-        if metadata:
-            result.update(metadata)
 
         try:
             # Score the answer using the pairwise evaluator
             score_result = self.pairwise_metric.score(
                 question=question,
-                reference_answer=reference_answer,
-                predicted_answer=predicted_answer,
+                baseline_answer=baseline_answer,
+                candidate_answer=candidate_answer,
             )
 
             # Add scores to the result
@@ -97,6 +88,8 @@ class DeepResearchEvaluator:
                 result[f"{dimension}_score"] = dim_data.score
                 result[f"{dimension}_grade"] = dim_data.grade
                 result[f"{dimension}_is_win"] = dim_data.is_win
+                result[f"{dimension}_is_tie"] = dim_data.is_tie
+                result[f"{dimension}_is_lose"] = dim_data.is_lose
 
         except Exception as e:
             result["success"] = False
@@ -110,7 +103,7 @@ class DeepResearchEvaluator:
 
         Args:
             data: DataFrame containing questions and answers to evaluate
-                Expected columns: 'question', 'reference_answer', 'predicted_answer'
+                Expected columns: 'question', 'baseline_answer', 'candidate_answer'
 
         Returns:
             List of evaluation results
@@ -118,7 +111,7 @@ class DeepResearchEvaluator:
         results = []
 
         # Check if required columns exist
-        required_columns = ["question", "reference_answer", "predicted_answer"]
+        required_columns = ["question", "baseline_answer", "candidate_answer"]
         for col in required_columns:
             if col not in data.columns:
                 raise ValueError(f"Input data must contain column: {col}")
@@ -126,47 +119,41 @@ class DeepResearchEvaluator:
         # Create a list of tasks
         tasks = []
         for _, row in data.iterrows():
-            # Extract metadata (any columns not used for evaluation)
-            metadata = {
-                col: row[col] for col in data.columns if col not in required_columns
-            }
-
             tasks.append(
                 {
                     "question": row["question"],
-                    "reference_answer": row["reference_answer"],
-                    "predicted_answer": row["predicted_answer"],
-                    "metadata": metadata,
+                    "baseline_answer": row["baseline_answer"],
+                    "candidate_answer": row["candidate_answer"],
                 }
             )
 
         # Process tasks in parallel
         with concurrent.futures.ThreadPoolExecutor(
-            max_workers=self.evaluator_num_workers
+            max_workers=self.num_workers
         ) as executor:
+            # Submit all tasks
             futures = [
                 executor.submit(
                     self.evaluate_single,
                     task["question"],
-                    task["reference_answer"],
-                    task["predicted_answer"],
-                    task["metadata"],
+                    task["baseline_answer"],
+                    task["candidate_answer"],
                 )
                 for task in tasks
             ]
 
-            # Process results as they complete
+            # Process results in order they were submitted
             for future in tqdm(
-                concurrent.futures.as_completed(futures),
+                futures,
                 total=len(futures),
                 desc="Evaluating",
             ):
                 try:
                     result = future.result()
                     results.append(result)
-
                 except Exception as e:
                     print(f"Error processing task: {e}")
+                    results.append({"success": False, "error": str(e)})
 
         return results
 
@@ -209,7 +196,7 @@ def parse_args():
         "--input-data",
         type=str,
         required=True,
-        help="Path to input CSV file. The CSV should have columns 'question', 'reference_answer', and 'predicted_answer'.",
+        help="Path to input CSV file. The CSV should have columns 'question', 'baseline_answer', and 'candidate_answer'.",
     )
     parser.add_argument(
         "--output-dir", type=str, required=True, help="Directory to save results"
@@ -221,16 +208,16 @@ def parse_args():
         help="Model to use for evaluation",
     )
     parser.add_argument(
-        "--evaluator-num-workers",
+        "--num-workers",
         type=int,
         default=4,
-        help="Number of worker threads for evaluator",
+        help="Number of worker threads for evaluation",
     )
     parser.add_argument(
         "--metric-num-workers",
         type=int,
-        default=3,
-        help="Number of worker threads for metric",
+        default=1,
+        help="Number of worker threads used in the pairwise metric computation on each row",
     )
     parser.add_argument(
         "--metric-num-trials",
@@ -260,14 +247,14 @@ def main():
     evaluator = DeepResearchEvaluator(
         model=args.model,
         output_path=output_path,
-        evaluator_num_workers=args.evaluator_num_workers,
+        num_workers=args.num_workers,
         metric_num_workers=args.metric_num_workers,
         metric_num_trials=args.metric_num_trials,
     )
 
     # Run evaluation
     print(
-        f"Starting evaluation with model {args.model} using {args.evaluator_num_workers} evaluator workers and {args.metric_num_workers} metric workers..."
+        f"Starting evaluation with model {args.model} using {args.num_workers} workers and {args.metric_num_workers} metric workers..."
     )
     results = evaluator.evaluate_batch(df)
 
@@ -300,9 +287,9 @@ def main():
         print("\nKey Metrics:")
         print(f"Total examples: {aggregate_metrics.get('support', 0)}")
 
-        if "macro_avg" in aggregate_metrics:
-            print("\nMacro Average Metrics:")
-            for metric, value in aggregate_metrics["macro_avg"].items():
+        if "overall" in aggregate_metrics:
+            print("\nOverall Metrics:")
+            for metric, value in aggregate_metrics["overall"].items():
                 if isinstance(value, float):
                     print(f"{metric}: {value:.4f}")
                 else:
