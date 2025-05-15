@@ -1,4 +1,4 @@
-# YDC Deep Research Evals
+# DeepConsult: Deep Reaearch Benchmark for Consulting / Business Queries
 
 This repository contains evals metrics and scripts for evaluating Deep Research reports.
 
