@@ -1,4 +1,4 @@
-# DeepConsult: Deep Research Benchmark for Consulting / Business Queries
+# DeepConsult: A Deep Research Benchmark for Consulting / Business Queries
 
 This repository contains evals metrics and scripts for evaluating Deep Research reports.
 
