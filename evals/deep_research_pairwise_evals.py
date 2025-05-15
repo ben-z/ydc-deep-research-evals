@@ -195,7 +195,7 @@ def parse_args():
     parser.add_argument(
         "--input-data",
         type=str,
-        default="datasets/ari_15_may_2025.csv",
+        default="datasets/DeepConsult/responses_OpenAI-DeepResearch_vs_ARI_2025-05-15.csv",
         help="Path to input CSV file. The CSV should have columns 'question', 'baseline_answer', and 'candidate_answer'.",
     )
     parser.add_argument(

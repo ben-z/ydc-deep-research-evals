@@ -14,6 +14,25 @@ The evaluation is performed by comparing generated research reports against refe
 
 These dimensions align with the capabilities that make Deep Research tools effective at analytical reasoning, information synthesis, and generating insightful research reports.
 
+
+## DeepConsult Dataset
+
+We include the DeepConsult dataset in the `datasets/DeepConsult` directory, which consists of:
+
+1. `queries.csv` - A collection of business and consulting-related prompts designed for deep research. These queries cover a wide range of topics including:
+   - Market analysis and investment opportunities
+   - Industry-specific evaluations
+   - Financial modeling and assessment
+   - Technology trend analysis
+   - Strategic business planning
+
+2. `responses_OpenAI-DeepResearch_vs_ARI_2025-05-15.csv` - This file contains responses from OpenAI DeepResearch and ARI formatted specifically for use with the evaluation script. The file follows the required format for the evals script:
+   - `question`: The original research questions/prompts
+   - `baseline_answer`: Responses from OpenAI's Deep Research capabilities (used as reference)
+   - `candidate_answer`: Responses from ARI to be evaluated against the baseline
+   
+The dataset is designed to benchmark and evaluate the capability of language models to perform deep research on complex business and consulting queries, assessing their ability to provide comprehensive, well-structured, and insightful analysis comparable to professional consulting reports.
+
 ## Installation
 
 1. Clone this repository:
@@ -54,7 +73,7 @@ To evaluate research-style responses, use the `deep_research_pairwise_evals.py` 
 
 ```bash
 python evals/deep_research_pairwise_evals.py \
-  --input-data datasets/ari_15_may_2025.csv \
+  --input-data datasets/DeepConsult/responses_OpenAI-DeepResearch_vs_ARI_2025-05-15.csv \
   --output-dir path/to/output/directory \
   --model o3-mini-2025-01-31 \
   --num-workers 4 \
