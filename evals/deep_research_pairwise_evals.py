@@ -237,7 +237,8 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Set up output path
-    output_path = output_dir / f"deep_research_results_{slugify(args.model)}.jsonl"
+    now = datetime.now()
+    output_path = output_dir / f"deep_research_results_{slugify(args.model)}_{slugify(now.strftime('%Y-%m-%d-%H-%M-%S'))}.jsonl"
 
     # Load input data
     print(f"Loading data from {args.input_data}")
@@ -278,7 +279,7 @@ def main():
         aggregate_metrics = evaluator.aggregate_results(results)
 
         # Save aggregate metrics
-        aggregate_path = output_dir / f"deep_research_aggregate_{slugify(args.model)}.json"
+        aggregate_path = output_dir / f"deep_research_aggregate_{slugify(args.model)}_{slugify(now.strftime('%Y-%m-%d-%H-%M-%S'))}.json"
         with open(aggregate_path, "w") as f:
             json.dump(aggregate_metrics, f, indent=2)
 
