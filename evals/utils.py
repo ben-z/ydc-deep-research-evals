@@ -10,6 +10,7 @@ from openai.types.chat import ChatCompletionMessageParam
 
 
 client = OpenAI(
+    base_url=os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
     api_key=os.environ["OPENAI_API_KEY"],
     organization=os.environ["OPENAI_ORGANIZATION_ID"],
 )

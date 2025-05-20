@@ -2,6 +2,7 @@ import argparse
 import concurrent.futures
 import json
 from pathlib import Path
+from slugify import slugify
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -236,7 +237,7 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Set up output path
-    output_path = output_dir / f"deep_research_results_{args.model}.jsonl"
+    output_path = output_dir / f"deep_research_results_{slugify(args.model)}.jsonl"
 
     # Load input data
     print(f"Loading data from {args.input_data}")
