@@ -278,7 +278,7 @@ def main():
         aggregate_metrics = evaluator.aggregate_results(results)
 
         # Save aggregate metrics
-        aggregate_path = output_dir / f"deep_research_aggregate_{args.model}.json"
+        aggregate_path = output_dir / f"deep_research_aggregate_{slugify(args.model)}.json"
         with open(aggregate_path, "w") as f:
             json.dump(aggregate_metrics, f, indent=2)
 
